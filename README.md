@@ -16,16 +16,18 @@ This script provides a dynamic marketplace system within the QBCore framework, a
 1. **Download and Extract** 📥
    - Download the script and extract it to your `resources` folder.
 
-2. **Add to Server Config** 📝
+3. Add `zz-marketplac.sql` file to your Database 
+
+4. **Add to Server Config** 📝
    - Add the resource to your `server.cfg`:
      ```plaintext
      ensure zz-marketplace
      ```
 
-3. **Configure the Ped** 👤
+5. **Configure the Ped** 👤
    - Edit the `config.lua` to set the ped model and position for the marketplace NPC.
 
-4. **Setup Menu and Target System** ⚙️
+6. **Setup Menu and Target System** ⚙️
    - Choose your preferred menu (`qb-menu` or `ox_lib`) and target system (`qb-target` or `ox_target`) in the `config.lua`.
    - Support for ox_inventory will be added soon!
 
