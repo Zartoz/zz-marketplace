@@ -6,4 +6,4 @@ Config.MenuSystem = 'ox_lib' -- or 'ox_lib' qb menu
 
 Config.PedModel = 'a_m_m_business_01' -- Example ped model
 
-Config.PedPosition = { x = 225.57, y = 768.42, z = 203.65, h = 62.51 } -- Example coordinates and heading
+Config.PedPosition = { x = 448.92, y = -800.45, z = 27.8, h = 275.06 } -- Example coordinates
