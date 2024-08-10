@@ -37,4 +37,4 @@ This script provides a dynamic marketplace system within the QBCore framework, a
 
 ## Credits 🙌
 
-- Developed by [Zartoz]
+- Created by Zartoz 
