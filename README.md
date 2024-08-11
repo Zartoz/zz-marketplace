@@ -1,13 +1,12 @@
 # QBCore Marketplace Script 🛒
 
-This script provides a dynamic marketplace system within the QBCore framework, allowing players to buy and sell items in-game. Players can list items from their inventory for sale, browse items others have listed, and view recent purchases. The marketplace is accessible via a ped placed in the game world, and both the menu and target systems are configurable to support either `qb-menu` or `ox_lib`, and `qb-target` or `ox_target`.
+This script provides a dynamic marketplace system within the QBCore framework, allowing players to buy and sell items in-game. Players can list items from their inventory for sale, browse items others have listed, and view recent purchases. The marketplace is accessible via a ped placed in the game world, you can also choose your target system by navigating to the config.lua file.
 
 ## Features 🌟
 
 - **Sell Items**: Players can list items from their inventory for sale with customizable pricing and descriptions. 💸
 - **Buy Items**: Browse and purchase items listed by other players in the marketplace. 🛍️
 - **Recent Purchases**: View a list of recent purchases made by other players. 📜
-- **Configurable Menus**: Supports both `qb-menu` and `ox_lib` for a flexible menu experience. 📋
 - **Ped and Target System**: Place a marketplace ped in-game and interact with it using `qb-target` or `ox_target`, depending on your preference. 🎯
 - **Blip Integration**: Adds a customizable blip on the map to mark the marketplace location. 🗺️
 
@@ -28,7 +27,7 @@ This script provides a dynamic marketplace system within the QBCore framework, a
    - Edit the `config.lua` to set the ped model and position for the marketplace NPC.
 
 6. **Setup Menu and Target System** ⚙️
-   - Choose your preferred menu (`qb-menu` or `ox_lib`) and target system (`qb-target` or `ox_target`) in the `config.lua`.
+   - Currently only support ox lib menu!
    - Support for ox_inventory will be added soon!
 
 ## Usage 🎮
