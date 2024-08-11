@@ -3,23 +3,22 @@ game 'gta5'
 lua54 'yes'
 
 author 'Zartoz'
-description 'Simple marketplace script for QBCore Framework.'
-version '1.0.0'
+description 'A simple QBCore Marketplace Script'
+version '2.0.0'
 
 shared_scripts {
     'config.lua',
     '@ox_lib/init.lua'
 }
 
-client_scripts {
-    'client.lua'
-}
-
-server_scripts {
-    '@mysql-async/lib/MySQL.lua', -- Ensure you have mysql-async installed
+client_script 'client.lua'
+server_script {
+    '@oxmysql/lib/MySQL.lua',
     'server.lua'
 }
 
 dependencies {
+    'ox_lib',
+    'oxmysql',
     'qb-core'
 }
