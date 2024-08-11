@@ -1,9 +1,10 @@
 Config = {}
 
-Config.TargetSystem = 'qb-target' -- Change to qb-target if using qb-target
+-- Coordinates for the Marketplace Location
+Config.MarketplaceCoords = vector3(452.6795, -783.4480, 27.3578)
 
-Config.MenuSystem = 'ox_lib' -- or 'ox_lib' qb menu
+-- Choose the targeting system: 'ox_target' or 'qb-target'
+Config.TargetSystem = 'qb-target'
 
-Config.PedModel = 'a_m_m_business_01' -- Example ped model
-
-Config.PedPosition = { x = 448.92, y = -800.45, z = 27.8, h = 275.06 } -- Example coordinates
+-- Maximum number of recent buys to store
+Config.MaxRecentBuys = 10
