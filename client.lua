@@ -1,233 +1,221 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
-local itemsForSale = {}
-local recentBuys = {}
-
-local function openMainMenu()
-    if Config.MenuSystem == 'qb-menu' then
-        local menu = {
-            {
-                header = 'Public Marketplace',
-                isMenuHeader = true
-            },
-            {
-                header = 'Items for Sale',
-                txt = 'Browse available items',
-                params = {
-                    event = 'zz-marketplace:showItemsForSale'
-                }
-            },
-            {
-                header = 'Recent Buys',
-                txt = 'See what people have bought recently',
-                params = {
-                    event = 'zz-marketplace:showRecentBuys'
-                }
-            },
-            {
-                header = 'Sell an Item',
-                txt = 'Sell an item from your inventory',
-                params = {
-                    event = 'zz-marketplace:sellItem'
-                }
-            }
-        }
-        exports['qb-menu']:openMenu(menu)
-    elseif Config.MenuSystem == 'ox_lib' then
-        local menu = {
-            {
-                title = 'Marketplace',
-                disabled = true
-            },
-            {
-                title = 'Items for Sale',
-                description = 'Browse available items',
-                event = 'zz-marketplace:showItemsForSale'
-            },
-            {
-                title = 'Recent Buys',
-                description = 'See what people have bought recently',
-                event = 'zz-marketplace:showRecentBuys'
-            },
-            {
-                title = 'Sell an Item',
-                description = 'Sell an item from your inventory',
-                event = 'zz-marketplace:sellItem'
-            }
-        }
-        lib.registerContext({ id = 'marketplace_main_menu', title = 'Marketplace', options = menu })
-        lib.showContext('marketplace_main_menu')
-    end
-end
-
-RegisterNetEvent('zz-marketplace:showItemsForSale')
-AddEventHandler('zz-marketplace:showItemsForSale', function()
-    local menu = {
+local function OpenMarketplaceMenu()
+    local options = {
         {
-            title = 'Items for Sale',
-            disabled = true
-        }
-    }
-
-    for id, item in pairs(itemsForSale) do
-        table.insert(menu, {
-            title = item.label,
-            description = 'Price: $' .. item.price .. ' | Seller: ' .. item.seller .. ' | Description: ' .. item.description,
-            event = 'zz-marketplace:buyItem',
-            args = id
-        })
-    end
-
-    if Config.MenuSystem == 'qb-menu' then
-        exports['qb-menu']:openMenu(menu)
-    elseif Config.MenuSystem == 'ox_lib' then
-        lib.registerContext({ id = 'marketplace_items_for_sale', title = 'Items for Sale', options = menu })
-        lib.showContext('marketplace_items_for_sale')
-    end
-end)
-
-RegisterNetEvent('zz-marketplace:showRecentBuys')
-AddEventHandler('zz-marketplace:showRecentBuys', function()
-    local menu = {
-        {
-            title = 'Recent Buys',
-            disabled = true
-        }
-    }
-
-    for _, item in ipairs(recentBuys) do
-        table.insert(menu, {
-            title = item.label,
-            description = 'Bought by: ' .. item.buyer .. ' | Price: $' .. item.price .. ' | Seller: ' .. item.seller,
-            event = '',
-            args = nil
-        })
-    end
-
-    if Config.MenuSystem == 'qb-menu' then
-        exports['qb-menu']:openMenu(menu)
-    elseif Config.MenuSystem == 'ox_lib' then
-        lib.registerContext({ id = 'marketplace_recent_buys', title = 'Recent Buys', options = menu })
-        lib.showContext('marketplace_recent_buys')
-    end
-end)
-
-RegisterNetEvent('zz-marketplace:buyItem')
-AddEventHandler('zz-marketplace:buyItem', function(itemId)
-    TriggerServerEvent('zz-marketplace:buyItem', itemId)
-end)
-
-RegisterNetEvent('zz-marketplace:sellItem')
-AddEventHandler('zz-marketplace:sellItem', function()
-    QBCore.Functions.TriggerCallback('zz-marketplace:getInventory', function(inventory)
-        local menu = {}
-
-        for _, item in ipairs(inventory) do
-            if item.amount > 0 then
-                table.insert(menu, {
-                    title = item.label,
-                    description = 'Amount: ' .. item.amount,
-                    event = 'zz-marketplace:confirmSellItem',
-                    args = {name = item.name, label = item.label}
-                })
+            title = 'Buy an item',
+            description = 'Browse items available for purchase',
+            icon = 'shopping-cart',
+            onSelect = function()
+                TriggerServerEvent('marketplace:getItemsForSale')
             end
-        end
+        },
+        {
+            title = 'Sell an item',
+            description = 'Select an item from your inventory to sell',
+            icon = 'money-bill',
+            onSelect = function()
+                TriggerEvent('marketplace:sellItemMenu')
+            end
+        },
+        {
+            title = 'Recent buys',
+            description = 'View the latest purchased items',
+            icon = 'receipt',
+            onSelect = function()
+                TriggerServerEvent('marketplace:getRecentBuys')
+            end
+        },
+        {
+            title = 'Sellers',
+            description = 'Browse sellers with items for sale',
+            icon = 'user-tag',
+            onSelect = function()
+                TriggerServerEvent('marketplace:getSellers')
+            end
+        }
+    }
 
-        table.insert(menu, { title = 'Close', event = '' })
-
-        if Config.MenuSystem == 'qb-menu' then
-            exports['qb-menu']:openMenu(menu)
-        elseif Config.MenuSystem == 'ox_lib' then
-            lib.registerContext({ id = 'marketplace_sell_item', title = 'Sell Item', options = menu })
-            lib.showContext('marketplace_sell_item')
-        end
-    end)
-end)
-
-RegisterNetEvent('zz-marketplace:confirmSellItem')
-AddEventHandler('zz-marketplace:confirmSellItem', function(data)
-    local input = lib.inputDialog('Set Item Price and Description', {
-        { type = 'number', label = 'Price', default = 0, required = true },
-        { type = 'input', label = 'Description', default = '', required = true }
+    lib.registerContext({
+        id = 'marketplace_menu',
+        title = 'Marketplace',
+        options = options
     })
 
-    if input and input[1] and input[2] then
-        local price = tonumber(input[1])
-        local description = tostring(input[2])
-        TriggerServerEvent('zz-marketplace:sellItem', data.name, price, description)
-    else
-        QBCore.Functions.Notify('You must set a price and description', 'error')
-    end
-end)
+    lib.showContext('marketplace_menu')
+end
 
-local function spawnMarketplacePed()
-    local model = GetHashKey(Config.PedModel)
-    RequestModel(model)
-    while not HasModelLoaded(model) do
-        Wait(100)
-    end
-
-    local ped = CreatePed(4, model, Config.PedPosition.x, Config.PedPosition.y, Config.PedPosition.z, Config.PedPosition.h, false, true)
-    SetEntityAsMissionEntity(ped, true, true)
-    SetBlockingOfNonTemporaryEvents(ped, true)
-    SetPedDiesWhenInjured(ped, false)
-    SetPedCanPlayAmbientAnims(ped, true)
-    SetPedCanRagdollFromPlayerImpact(ped, false)
-    TaskStartScenarioInPlace(ped, "WORLD_HUMAN_AA_SMOKET", 0, true)
-
-    if Config.TargetSystem == 'qb-target' then
-        exports['qb-target']:AddTargetEntity(ped, {
+Citizen.CreateThread(function()
+    if Config.TargetSystem == 'ox_target' then
+        exports.ox_target:addSphereZone({
+            coords = Config.MarketplaceCoords,
+            radius = 2.0,
             options = {
                 {
-                    event = "zz-marketplace:openMenu",
+                    label = 'Marketplace',
                     icon = "fas fa-shopping-cart",
-                    label = "Open Marketplace",
-                    action = function(entity)
-                        TriggerEvent('zz-marketplace:openMenu')
+                    onSelect = function()
+                        OpenMarketplaceMenu()
+                    end
+                }
+            }
+        })
+    elseif Config.TargetSystem == 'qb-target' then
+        exports['qb-target']:AddCircleZone("marketplace_zone", Config.MarketplaceCoords, 2.0, {
+            name = "marketplace_zone",
+            debugPoly = false
+        }, {
+            options = {
+                {
+                    label = "Marketplace",
+                    icon = "fas fa-shopping-cart",
+                    action = function()
+                        OpenMarketplaceMenu()
                     end
                 }
             },
-            distance = 2.5
-        })
-    elseif Config.TargetSystem == 'ox_target' then
-        exports.ox_target:addLocalEntity(ped, {
-            {
-                name = "marketplace_ped",
-                icon = "fas fa-shopping-cart",
-                label = "Open Marketplace",
-                onSelect = function()
-                    TriggerEvent('zz-marketplace:openMenu')
-                end
-            }
+            distance = 2.0
         })
     end
-end
+end)
+
+RegisterNetEvent('marketplace:sellItemMenu', function()
+    local playerItems = QBCore.Functions.GetPlayerData().items
+    local options = {}
+
+    for _, item in pairs(playerItems) do
+        if item ~= nil and item.amount > 0 then
+            table.insert(options, {
+                title = item.label,
+                icon = item.image,
+                onSelect = function()
+                    TriggerEvent('marketplace:sellItemDetails', item.name)
+                end
+            })
+        end
+    end
+
+    lib.registerContext({
+        id = 'marketplace_sell_item_menu',
+        title = 'Select Item to Sell',
+        options = options
+    })
+
+    lib.showContext('marketplace_sell_item_menu')
+end)
+
+RegisterNetEvent('marketplace:sellItemDetails', function(itemName)
+    local input = lib.inputDialog('Sell an item', {
+        {type = 'number', label = 'Price', required = true, min = 1},
+        {type = 'textarea', label = 'Description', required = true},
+    })
+
+    if input then
+        TriggerServerEvent('marketplace:sellItem', itemName, tonumber(input[1]), input[2])
+    end
+end)
+
+RegisterNetEvent('marketplace:showItemsForSale', function(items)
+    local options = {}
+
+    for i, item in ipairs(items) do
+        table.insert(options, {
+            title = item.name .. ' - $' .. item.price,
+            description = 'Seller: ' .. item.seller_name .. '\n Description: ' .. item.description,
+            icon = 'tag',
+            onSelect = function()
+                TriggerServerEvent('marketplace:buyItem', item.id)
+            end
+        })
+    end
+
+    lib.registerContext({
+        id = 'marketplace_buy_menu',
+        title = 'Items for Sale',
+        options = options
+    })
+
+    lib.showContext('marketplace_buy_menu')
+end)
+
+RegisterNetEvent('marketplace:showRecentBuys', function(buys)
+    local options = {}
+
+    for i, buy in ipairs(buys) do
+        table.insert(options, {
+            title = buy.item_name .. ' - $' .. buy.price,
+            description = 'Bought by: ' .. buy.buyer_name .. '\nSold by: ' .. buy.seller_name
+        })
+    end
+
+    lib.registerContext({
+        id = 'marketplace_recent_buys_menu',
+        title = 'Recent Buys',
+        options = options
+    })
+
+    lib.showContext('marketplace_recent_buys_menu')
+end)
+
 
 local function addBlip()
-    local blip = AddBlipForCoord(Config.PedPosition.x, Config.PedPosition.y, Config.PedPosition.z)
-    SetBlipSprite(blip, 521) -- Example blip sprite, change as needed
+    local blip = AddBlipForCoord(Config.MarketplaceCoords)
+    SetBlipSprite(blip, 521) 
     SetBlipDisplay(blip, 4)
     SetBlipScale(blip, 0.8)
-    SetBlipColour(blip, 26) -- Example blip color, change as needed
+    SetBlipColour(blip, 26) 
     SetBlipAsShortRange(blip, true)
     BeginTextCommandSetBlipName("STRING")
-    AddTextComponentString("Public Marketplace") -- Blip name
+    AddTextComponentString("Public Marketplace") 
     EndTextCommandSetBlipName(blip)
 end
 
 CreateThread(function()
-    spawnMarketplacePed()
     addBlip()
 end)
 
-RegisterNetEvent('zz-marketplace:openMenu')
-AddEventHandler('zz-marketplace:openMenu', function()
-    TriggerServerEvent('zz-marketplace:requestItemsForSale')
+RegisterNetEvent('marketplace:showSellers', function(sellers)
+    local options = {}
+
+    for i, seller in ipairs(sellers) do
+        table.insert(options, {
+            title = seller.name,
+            description = 'View items from this seller',
+            icon = 'user',
+            onSelect = function()
+                TriggerServerEvent('marketplace:getItemsBySeller', seller.seller_id)
+            end
+        })
+    end
+
+    lib.registerContext({
+        id = 'marketplace_sellers_menu',
+        title = 'Sellers with Items for Sale',
+        options = options
+    })
+
+    lib.showContext('marketplace_sellers_menu')
 end)
 
-RegisterNetEvent('zz-marketplace:updateItemsForSale')
-AddEventHandler('zz-marketplace:updateItemsForSale', function(receivedItems, recent)
-    itemsForSale = receivedItems or {}
-    recentBuys = recent or {}
-    openMainMenu()
+RegisterNetEvent('marketplace:showItemsBySeller', function(items)
+    local options = {}
+
+    for i, item in ipairs(items) do
+        table.insert(options, {
+            title = item.name .. ' - $' .. item.price,
+            description = 'Seller: ' .. item.seller_name .. '\n' .. item.description,
+            icon = 'tag',
+            onSelect = function()
+                TriggerServerEvent('marketplace:buyItem', item.id)
+            end
+        })
+    end
+
+    lib.registerContext({
+        id = 'marketplace_seller_items_menu',
+        title = 'Items for Sale by Seller',
+        options = options
+    })
+
+    lib.showContext('marketplace_seller_items_menu')
 end)
