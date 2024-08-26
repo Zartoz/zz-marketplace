@@ -3,8 +3,8 @@ game 'gta5'
 lua54 'yes'
 
 author 'Zartoz'
-description 'A simple QBCore Marketplace Script'
-version '2.0.0'
+description 'Advanced QBCore Marketplace Script'
+version '2.2.0'
 
 shared_scripts {
     'config.lua',
