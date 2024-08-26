@@ -45,30 +45,40 @@ local function OpenMarketplaceMenu()
     lib.showContext('marketplace_menu')
 end
 
-Citizen.CreateThread(function()
+local function CreateMarketplacePed()
+    local pedModel = Config.PedModel 
+    RequestModel(pedModel)
+    
+    while not HasModelLoaded(pedModel) do
+        Wait(0)
+    end
+
+    local pedCoords = Config.PedCoords
+
+    local ped = CreatePed(4, pedModel, pedCoords.x, pedCoords.y, pedCoords.z, pedCoords.w, false, true)
+    SetEntityInvincible(ped, true)
+    SetBlockingOfNonTemporaryEvents(ped, true)
+    TaskStartScenarioInPlace(ped, "WORLD_HUMAN_STAND_IMPATIENT", 0, true)
+    FreezeEntityPosition(ped, true)
+
     if Config.TargetSystem == 'ox_target' then
-        exports.ox_target:addSphereZone({
-            coords = Config.MarketplaceCoords,
-            radius = 2.0,
-            options = {
-                {
-                    label = 'Marketplace',
-                    icon = "fas fa-shopping-cart",
-                    onSelect = function()
-                        OpenMarketplaceMenu()
-                    end
-                }
+        exports.ox_target:addLocalEntity(ped, {
+            {
+                name = 'marketplace_ped',
+                label = 'Marketplace',
+                icon = 'fas fa-shopping-cart',
+                onSelect = function()
+                    OpenMarketplaceMenu()
+                end,
+                distance = 2.0
             }
         })
     elseif Config.TargetSystem == 'qb-target' then
-        exports['qb-target']:AddCircleZone("marketplace_zone", Config.MarketplaceCoords, 2.0, {
-            name = "marketplace_zone",
-            debugPoly = false
-        }, {
+        exports['qb-target']:AddTargetEntity(ped, {
             options = {
                 {
-                    label = "Marketplace",
-                    icon = "fas fa-shopping-cart",
+                    label = 'Marketplace',
+                    icon = 'fas fa-shopping-cart',
                     action = function()
                         OpenMarketplaceMenu()
                     end
@@ -77,7 +87,20 @@ Citizen.CreateThread(function()
             distance = 2.0
         })
     end
+end
+
+Citizen.CreateThread(function()
+    CreateMarketplacePed()
 end)
+
+local function IsItemBlacklisted(itemName)
+    for _, blacklistedItem in ipairs(Config.BlacklistedItems) do
+        if blacklistedItem:lower() == itemName:lower() then
+            return true
+        end
+    end
+    return false
+end
 
 RegisterNetEvent('marketplace:sellItemMenu', function()
     local playerItems = QBCore.Functions.GetPlayerData().items
@@ -85,23 +108,30 @@ RegisterNetEvent('marketplace:sellItemMenu', function()
 
     for _, item in pairs(playerItems) do
         if item ~= nil and item.amount > 0 then
-            table.insert(options, {
-                title = item.label,
-                icon = item.image,
-                onSelect = function()
-                    TriggerEvent('marketplace:sellItemDetails', item.name)
-                end
-            })
+            if IsItemBlacklisted(item.name) then
+                TriggerEvent('QBCore:Notify', "Some items cannot be put on sale ", "error")
+            else
+                table.insert(options, {
+                    title = item.label,
+                    onSelect = function()
+                        TriggerEvent('marketplace:sellItemDetails', item.name)
+                    end
+                })
+            end
         end
     end
 
-    lib.registerContext({
-        id = 'marketplace_sell_item_menu',
-        title = 'Select Item to Sell',
-        options = options
-    })
+    if #options > 0 then
+        lib.registerContext({
+            id = 'marketplace_sell_item_menu',
+            title = 'Select Item to Sell',
+            options = options
+        })
 
-    lib.showContext('marketplace_sell_item_menu')
+        lib.showContext('marketplace_sell_item_menu')
+    else
+        TriggerEvent('QBCore:Notify', "No items available for sale", "error")
+    end
 end)
 
 RegisterNetEvent('marketplace:sellItemDetails', function(itemName)
@@ -156,7 +186,6 @@ RegisterNetEvent('marketplace:showRecentBuys', function(buys)
 
     lib.showContext('marketplace_recent_buys_menu')
 end)
-
 
 local function addBlip()
     local blip = AddBlipForCoord(Config.MarketplaceCoords)
