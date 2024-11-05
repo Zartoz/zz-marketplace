@@ -107,7 +107,7 @@ RegisterNetEvent('marketplace:sellItemMenu', function()
     local options = {}
 
     for _, item in pairs(playerItems) do
-        if item ~= nil and item.amount > 0 then
+        if item ~= nil and item.count > 0 then
             if IsItemBlacklisted(item.name) then
                 TriggerEvent('QBCore:Notify', "Some items cannot be put on sale ", "error")
             else
